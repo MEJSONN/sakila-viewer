@@ -1,19 +1,17 @@
 <?php
 $baza = new mysqli('localhost', 'root', '', 'sakila');
-if ($baza->connect_error) {
-    die("Błąd połączenia z bazą danych: " . $baza->connect_error);
-}
+if ($baza->connect_error) die("Błąd połączenia z bazą danych: " . $baza->connect_error);
 
 $filmPerPage = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $filmPerPage;
 
 $titleInput = $_GET['title'] ?? '';
-$title = "%$titleInput%";
+$titleSQL = "%$titleInput%";
 $categoriesFilter = $_GET['category'] ?? [];
 
 $where = ["title LIKE ?"];
-$params = [$title];
+$params = [$titleSQL];
 $paramTypes = "s";
 
 if (!empty($categoriesFilter)) {
@@ -35,13 +33,19 @@ $stmt->bind_param($paramTypes, ...$params);
 $stmt->execute();
 $films = $stmt->get_result();
 
-$rentedQuery = $baza->query("SELECT film.film_id, film.rental_duration, COUNT(rental.rental_id) AS wypozyczone FROM film JOIN inventory ON film.film_id = inventory.film_id LEFT JOIN rental ON inventory.inventory_id = rental.inventory_id AND rental.return_date IS NULL GROUP BY film.film_id;");
+$rentedQuery = $baza->query("
+    SELECT film.film_id, film.rental_duration, COUNT(rental.rental_id) AS rented
+    FROM film
+    JOIN inventory ON film.film_id = inventory.film_id
+    LEFT JOIN rental ON inventory.inventory_id = rental.inventory_id AND rental.return_date IS NULL
+    GROUP BY film.film_id
+");
 
 $rentedFilms = [];
 foreach ($rentedQuery as $row) {
     $rentedFilms[$row['film_id']] = [
         'limit' => $row['rental_duration'],
-        'rented' => $row['wypozyczone']
+        'rented' => $row['rented']
     ];
 }
 
@@ -66,51 +70,48 @@ $pages = ceil($total / $filmPerPage);
 
 <body>
     <header>
+        <span>&nbsp;</span>
         <h1>Wypożyczalnia filmów</h1>
+        <button onclick="changeTheme()">Zmień motyw</button>
     </header>
     <main>
-        <menu class="filters">
-            <form method="get">
-                <p>Szukaj filmu po tytule:</p>
-                <label for="film">
-                    <input type="text" name="title" placeholder="Tytuł..." value="<?php echo $titleInput; ?>">
-                </label>
-                <p>Filtruj przez kategorie:</p>
-
-                <?php
-                $categories = $baza->query("SELECT * FROM category ORDER BY name ASC");
-                foreach ($categories as $category) {
-                    $checked = in_array($category['name'], $categoriesFilter) ? 'checked' : '';
-                    echo "
-                    <label>
-                        <input type='checkbox' name='category[]' value='{$category['name']}' $checked>
-                        {$category['name']}
-                    </label><br>
-                    ";
-                }
-                ?>
+        <menu class="menu">
+            <form method="get" class="filters">
+                <h4>Szukaj filmu po tytule:</h4>
+                <input type="text" name="title" placeholder="Tytuł..." value="<?= htmlspecialchars($titleInput) ?>">
+                <hr>
+                <section class="category-list">
+                    <h4>Filtruj przez kategorie:</h4>
+                    <?php
+                    $categories = $baza->query("SELECT * FROM category ORDER BY name ASC");
+                    foreach ($categories as $category) {
+                        $checked = in_array($category['name'], $categoriesFilter) ? 'checked' : '';
+                        echo "<label><input type='checkbox' name='category[]' value='{$category['name']}' $checked> {$category['name']}</label><br>";
+                    }
+                    ?>
+                </section>
+                <hr>
                 <button type="submit">Filtruj</button>
             </form>
-            <button onclick="changeTheme()">Zmień motyw</button>
         </menu>
+
         <section class="catalog">
             <?php
             foreach ($films as $film) {
                 $fid = $film['fid'];
                 $limit = $rentedFilms[$fid]['limit'] ?? 0;
                 $rented = $rentedFilms[$fid]['rented'] ?? 0;
-                $avaible = max(0, $limit - $rented);
-                $disabled = ($avaible == 0) ? 'disabled' : "onclick=\"location.href='./rent.php?fid=$fid'\"";
-                echo "
-                    <article class='film'>
-                        <h2>" . htmlspecialchars($film['title']) . "</h2>
-                        <p>" . htmlspecialchars($film['description']) . "</p>
+                $available = max(0, $limit - $rented);
+                $disabled = ($available == 0) ? 'disabled' : "onclick=\"location.href='rent.php?fid=$fid'\"";
+
+                echo "<article class='film'>
+                        <h2 class='film-title'>" . htmlspecialchars($film['title']) . "</h2>
+                        <p class='film-description'>" . htmlspecialchars($film['description']) . "</p>
                         <section class='buttons'>
                             <button onclick=\"location.href='film.php?fid=$fid'\">Szczegóły</button>
-                            <button $disabled>Wypożycz ($avaible dostępnych)</button>
+                            <button $disabled>Wypożycz ($available dostępnych)</button>
                         </section>
-                    </article>
-                    ";
+                    </article>";
             }
             ?>
         </section>
@@ -131,16 +132,16 @@ $pages = ceil($total / $filmPerPage);
     </footer>
 
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') document.body.classList.add('dark');
+        });
+
         function changeTheme() {
             document.body.classList.toggle('dark');
-            if (document.body.classList.contains('dark')) {
-                localStorage.setItem('theme', 'dark');
-            } else {
-                localStorage.setItem('theme', 'light');
-            }
+            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
         }
     </script>
-
 </body>
 
 </html>
