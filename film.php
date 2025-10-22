@@ -30,8 +30,11 @@
 
     $available = max(0, $film['rental_duration'] - $rentedNow);
     ?>
-
-    <h1 class="movie-title"><?= $film['title'] ?></h1>
+    <header>
+        <button onclick="location.href='index.php'">Wróć do listy filmów</button>
+        <h1><?= $film['title'] ?></h1>
+        <button onclick="changeTheme()">Zmień motyw</button>
+    </header>
     <section class="movie-description"><?= $film['description'] ?></section>
 
     <section class="movie-info">
@@ -41,8 +44,7 @@
         <p><strong>Dostępna ilość do wypożyczenia:</strong> <?= $available ?></p>
     </section>
 
-    <section class="buttons movie-info">
-        <button onclick="location.href='index.php'">Wróć do listy filmów</button>
+    <section class="movie-info rent-button">
         <button <?= ($available <= 0) ? 'disabled' : "onclick=\"location.href='rent.php?fid=$fid'\"" ?>>Wypożycz</button>
     </section>
 

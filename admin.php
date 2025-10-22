@@ -70,8 +70,8 @@ $pages = ceil($total / $filmPerPage);
 
 <body>
     <header>
-        <button onclick="location.href='admin.php'">Panel administracyjny</button>
-        <h1>Wypożyczalnia filmów</h1>
+        <button onclick="location.href='index.php'">Wróć do listy filmów</button>
+        <h1>Panel administracyjny</h1>
         <button onclick="changeTheme()">Zmień motyw</button>
     </header>
     <main>
@@ -108,8 +108,8 @@ $pages = ceil($total / $filmPerPage);
                         <h2 class='film-title'>" . htmlspecialchars($film['title']) . "</h2>
                         <p class='film-description'>" . htmlspecialchars($film['description']) . "</p>
                         <section class='buttons'>
-                            <button onclick=\"location.href='film.php?fid=$fid'\">Szczegóły</button>
-                            <button $disabled>Wypożycz ($available dostępnych)</button>
+                            <button onclick=\"location.href='edit.php?fid=$fid'\">Edytuj</button>
+                            <button onclick=\"location.href='delete.php?fid=$fid'\">Usuń</button>
                         </section>
                     </article>";
             }
