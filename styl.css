@@ -1,152 +1,139 @@
+/* Zmienne motywu */
 :root {
     --bg-color: #fff;
     --text-color: #222;
     --card-bg: #fff;
-    --link-color: black;
+    --link-color: #000;
+    --border-color: #ddd;
     --shadow-color: rgba(0, 0, 0, 0.1);
+    --input-bg: #fff;
+    --hover-color: #f5f5f5;
+    --border-radius: 8px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
 }
 
+/* Ciemny motyw */
 body.dark {
     --bg-color: #121212;
     --text-color: #eee;
     --card-bg: #1e1e1e;
     --link-color: #aaa;
+    --border-color: #333;
     --shadow-color: rgba(0, 0, 0, 0.5);
+    --input-bg: #2d2d2d;
+    --hover-color: #2a2a2a;
 }
 
+/* Reset i podstawowe style */
 * {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
 }
 
+/* Layout */
 header {
     display: flex;
-    flex-direction: row;
     justify-content: space-between;
-    padding: 16px;
+    align-items: center;
+    padding: var(--spacing-md);
+    background-color: var(--card-bg);
+    box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 main {
     display: flex;
-    flex-direction: row;
-    gap: 16px;
-    align-items: flex-start;
-    margin: 16px;
+    gap: var(--spacing-md);
+    margin: var(--spacing-md);
 }
 
-a {
-    color: var(--link-color);
-    text-decoration: none;
-}
-
-.catalog {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-    width: 80%;
-    margin: 0 auto;
-}
-
-.film {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.film-title {
-    height: 20%;
-}
-
-.film-description {
-    height: 60%;
-    margin-top: 10px;
-    font-size: 0.9rem;
-    color: var(--text-color);
-}
-
-.buttons {
-    margin-top: auto;
-    display: flex;
-    justify-content: space-between;
-}
-
-.film,
-.movie-description,
-.movie-info {
-    max-width: 800px;
-    margin: 10px auto;
-    font-size: 1rem;
-    background-color: var(--card-bg);
-    padding: 10px 15px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px var(--shadow-color);
-}
-
-.rent-info {
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-}
-
-.current-page {
-    min-width: 64px;
-    padding: 8px;
-}
-
+/* Menu i filtry */
 .menu {
     width: 20%;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
+    padding: var(--spacing-md);
     background-color: var(--card-bg);
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     box-shadow: 0 1px 3px var(--shadow-color);
-    gap: 12px;
+    height: fit-content;
 }
 
 .filters {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--spacing-md);
 }
 
-footer {
-    text-align: center;
-    padding: 20px;
-    margin-top: 20px;
-}
-
-.movie-title {
-    text-align: center;
-    margin: 30px 0 10px;
-    font-size: 2rem;
-}
-
-.movie-info p {
-    margin: 5px 0;
+/* Katalog filmów */
+.catalog {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+    width: 80%;
 }
 
 .buttons {
     display: flex;
     justify-content: space-between;
-    margin-top: 16px;
+}
+
+/* Karty filmów */
+.film, .movie-description, .movie-info {
+    background-color: var(--card-bg);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px var(--shadow-color);
+    max-width: 800px;
+    margin: var(--spacing-sm) auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.film-title {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.film-description {
+    font-size: 0.9rem;
+    margin: var(--spacing-sm) 0;
+    color: var(--text-color);
+}
+
+/* Komponenty formularza */
+input, textarea, select {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-color);
+    width: auto;
 }
 
 button {
+    padding: var(--spacing-sm) var(--spacing-md);
     background-color: var(--card-bg);
     color: var(--text-color);
-    border: 1px solid var(--text-color);
-    padding: 8px 12px;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     cursor: pointer;
-    box-shadow: 0 1px 3px var(--shadow-color);
+    transition: all 0.2s;
+}
+
+button:hover:not(:disabled) {
+    background-color: var(--hover-color);
 }
 
 button:disabled {
@@ -154,23 +141,27 @@ button:disabled {
     cursor: not-allowed;
 }
 
-input[type="text"] {
-    padding: 8px;
-    margin-bottom: 12px;
-    border: 1px solid var(--text-color);
-    border-radius: 4px;
-    background-color: var(--card-bg);
-    color: var(--text-color);
+/* Nawigacja */
+.current-page {
+    padding: var(--spacing-sm);
+    min-width: 64px;
+    text-align: center;
 }
 
-input,
-textarea,
-select,
-option,
-.button-save {
-    width: auto;
+footer {
+    text-align: center;
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-lg);
 }
 
+/* Szczegóły filmu */
+.movie-title {
+    font-size: 2rem;
+    text-align: center;
+    margin: var(--spacing-lg) 0;
+}
+
+/* Responsywność */
 @media screen and (max-width: 767px) {
     main {
         flex-direction: column;
@@ -178,14 +169,15 @@ option,
 
     .catalog {
         grid-template-columns: 1fr;
+        width: 100%;
     }
 
     .menu {
         width: 100%;
+        margin-bottom: var(--spacing-md);
     }
-}
 
-.rent-button {
-    text-align: center;
-    width: 100%;
+    .film, .movie-description, .movie-info {
+        margin: var(--spacing-sm) 0;
+    }
 }

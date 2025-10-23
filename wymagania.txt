@@ -15,13 +15,13 @@
     -lista aktorów
     przycisk wypożycz
 
-3. Panel administracyjny:
--Dodawani nowego filmu
+    3. Panel administracyjny:
+    -Dodawani nowego filmu
     -Edycja danych filmu
     -usuwanie filmu
 
 
-4.Bezpieczeństwo: - w panelu admina
+    4.Bezpieczeństwo: - w panelu admina
     -walidacja danych wejściowych
 
     5.responsywność 767px

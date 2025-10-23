@@ -133,7 +133,7 @@ if ($filmInfo->num_rows === 0) {
             <label for="lastUpdate">
                 <p>Ostatnia aktualizacja:</p>
                 <input type="datetime-local" name="lastUpdate" value="<?php echo date('Y-m-d\TH:i', strtotime($lastUpdate)); ?>" readonly>
-            </label><br>
+            </label>
         </section>
         <section class="movie-info">
             <button type="submit">Zapisz zmiany</button>
@@ -142,7 +142,6 @@ if ($filmInfo->num_rows === 0) {
 </body>
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Pobranie danych z formularza
     $title = $_POST['title'] ?? '';
     $description = $_POST['description'] ?? '';
     $releaseYear = (int)($_POST['releaseYear'] ?? 0);

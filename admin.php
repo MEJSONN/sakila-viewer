@@ -76,7 +76,7 @@ $pages = ceil($total / $filmPerPage);
                 </section>
                 <hr>
                 <button type="submit">Filtruj</button>
-                <hr>
+                <hr><br>
             </form>
             <button style="width: 100%;" onclick="location.href='add.php'">Dodaj film</button>
         </menu>
