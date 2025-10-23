@@ -17,11 +17,11 @@
 
 3. Panel administracyjny:
 -Dodawani nowego filmu
--Edycja danych filmu
--usuwanie filmu
+    -Edycja danych filmu
+    -usuwanie filmu
 
 
-4.Bezpieczeństwo:
+4.Bezpieczeństwo: - w panelu admina
     -walidacja danych wejściowych
 
     5.responsywność 767px

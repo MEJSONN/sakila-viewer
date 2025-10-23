@@ -26,9 +26,7 @@
         exit;
     }
 
-    $rentedNow = $baza->query("SELECT COUNT(r.rental_id) AS rented FROM inventory i LEFT JOIN rental r ON i.inventory_id = r.inventory_id AND r.return_date IS NULL WHERE i.film_id = $fid")->fetch_assoc()['rented'] ?? 0;
-
-    $available = max(0, $film['rental_duration'] - $rentedNow);
+    $available = $baza->query("SELECT COUNT(i.inventory_id) AS total FROM inventory i LEFT JOIN rental r ON i.inventory_id = r.inventory_id AND r.return_date IS NULL WHERE i.film_id = $fid AND r.rental_id IS NULL")->fetch_assoc()['total'] ?? 0;
     ?>
     <header>
         <button onclick="location.href='index.php'">Wróć do listy filmów</button>

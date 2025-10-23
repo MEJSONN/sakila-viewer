@@ -103,13 +103,13 @@ $pages = ceil($total / $filmPerPage);
                 $rented = $rentedFilms[$fid]['rented'] ?? 0;
                 $available = max(0, $limit - $rented);
                 $disabled = ($available == 0) ? 'disabled' : "onclick=\"location.href='rent.php?fid=$fid'\"";
-
+            
                 echo "<article class='film'>
                         <h2 class='film-title'>" . htmlspecialchars($film['title']) . "</h2>
                         <p class='film-description'>" . htmlspecialchars($film['description']) . "</p>
                         <section class='buttons'>
-                            <button onclick=\"location.href='edit.php?fid=$fid'\">Edytuj</button>
-                            <button onclick=\"location.href='delete.php?fid=$fid'\">Usuń</button>
+                            <button onclick=\"location.href='edit.php?fid=$fid'\">Informacje</button>
+                            <button onclick=\"if(confirm('Czy na pewno chcesz usunąć ten film?')) { location.href='delete.php?fid=$fid'; }\">Usuń</button>
                         </section>
                     </article>";
             }

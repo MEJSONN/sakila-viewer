@@ -33,22 +33,6 @@ $stmt->bind_param($paramTypes, ...$params);
 $stmt->execute();
 $films = $stmt->get_result();
 
-$rentedQuery = $baza->query("
-    SELECT film.film_id, film.rental_duration, COUNT(rental.rental_id) AS rented
-    FROM film
-    JOIN inventory ON film.film_id = inventory.film_id
-    LEFT JOIN rental ON inventory.inventory_id = rental.inventory_id AND rental.return_date IS NULL
-    GROUP BY film.film_id
-");
-
-$rentedFilms = [];
-foreach ($rentedQuery as $row) {
-    $rentedFilms[$row['film_id']] = [
-        'limit' => $row['rental_duration'],
-        'rented' => $row['rented']
-    ];
-}
-
 $totalStmt = $baza->prepare("SELECT COUNT(*) as count FROM film_list WHERE $whereSQL");
 $totalStmt->bind_param(substr($paramTypes, 0, -2), ...array_slice($params, 0, -2));
 $totalStmt->execute();
@@ -57,7 +41,6 @@ $totalRow = $totalResult->fetch_assoc();
 $total = $totalRow['count'];
 $pages = ceil($total / $filmPerPage);
 ?>
-
 <!DOCTYPE html>
 <html lang="pl">
 
@@ -74,6 +57,7 @@ $pages = ceil($total / $filmPerPage);
         <h1>Wypożyczalnia filmów</h1>
         <button onclick="changeTheme()">Zmień motyw</button>
     </header>
+
     <main>
         <menu class="menu">
             <form method="get" class="filters">
@@ -99,23 +83,46 @@ $pages = ceil($total / $filmPerPage);
             <?php
             foreach ($films as $film) {
                 $fid = $film['fid'];
-                $limit = $rentedFilms[$fid]['limit'] ?? 0;
-                $rented = $rentedFilms[$fid]['rented'] ?? 0;
-                $available = max(0, $limit - $rented);
-                $disabled = ($available == 0) ? 'disabled' : "onclick=\"location.href='rent.php?fid=$fid'\"";
 
-                echo "<article class='film'>
-                        <h2 class='film-title'>" . htmlspecialchars($film['title']) . "</h2>
-                        <p class='film-description'>" . htmlspecialchars($film['description']) . "</p>
-                        <section class='buttons'>
-                            <button onclick=\"location.href='film.php?fid=$fid'\">Szczegóły</button>
-                            <button $disabled>Wypożycz ($available dostępnych)</button>
-                        </section>
-                    </article>";
+                // liczymy wszystkie, wypożyczone i dostępne kopie (poprawna logika)
+                $query = "
+                SELECT 
+                    COUNT(i.inventory_id) AS wszystkie,
+                    SUM(
+                        CASE 
+                            WHEN (
+                                SELECT r2.return_date 
+                                FROM rental r2 
+                                WHERE r2.inventory_id = i.inventory_id 
+                                ORDER BY r2.rental_date DESC 
+                                LIMIT 1
+                            ) IS NULL THEN 1 ELSE 0 END
+                    ) AS wypozyczone
+                FROM inventory i
+                WHERE i.film_id = $fid
+            ";
+                $data = $baza->query($query)->fetch_assoc();
+                $wszystkie = $data['wszystkie'] ?? 0;
+                $wypozyczone = $data['wypozyczone'] ?? 0;
+                $dostepne = $wszystkie - $wypozyczone;
+
+                $availText = "Dostępne: $dostepne / $wszystkie";
+                $disabled = ($dostepne <= 0) ? 'disabled' : '';
+
+                echo "
+            <article class='film'>
+                <h2 class='film-title'>" . htmlspecialchars($film['title']) . "</h2>
+                <p class='film-description'>" . htmlspecialchars($film['description']) . "</p>
+                <section class='buttons'>
+                    <button onclick=\"location.href='film.php?fid=$fid'\">Szczegóły</button>
+                    <button $disabled onclick=\"location.href='rent.php?fid=$fid'\">Wypożycz ($availText)</button>
+                </section>
+            </article>";
             }
             ?>
         </section>
     </main>
+
     <footer>
         <?php
         $queryParams = $_GET;
@@ -144,4 +151,4 @@ $pages = ceil($total / $filmPerPage);
     </script>
 </body>
 
-</html>
+</html>x`

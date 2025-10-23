@@ -163,6 +163,14 @@ input[type="text"] {
     color: var(--text-color);
 }
 
+input,
+textarea,
+select,
+option,
+.button-save {
+    width: auto;
+}
+
 @media screen and (max-width: 767px) {
     main {
         flex-direction: column;
