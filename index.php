@@ -38,8 +38,7 @@ $totalStmt->bind_param(substr($paramTypes, 0, -2), ...array_slice($params, 0, -2
 $totalStmt->execute();
 $totalResult = $totalStmt->get_result();
 $totalRow = $totalResult->fetch_assoc();
-$total = $totalRow['count'];
-$pages = ceil($total / $filmPerPage);
+$pages = ceil($totalRow['count'] / $filmPerPage);
 ?>
 
 <!DOCTYPE html>
