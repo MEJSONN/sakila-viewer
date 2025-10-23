@@ -45,22 +45,16 @@
     <section class="movie-info rent-button">
         <button <?= ($available <= 0) ? 'disabled' : "onclick=\"location.href='rent.php?fid=$fid'\"" ?>>Wypożycz</button>
     </section>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const theme = localStorage.getItem('theme');
-            if (theme === 'dark') {
-                document.body.classList.add('dark');
-            }
-        });
-
-        function changeTheme() {
-            document.body.classList.toggle('dark');
-            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-        }
-    </script>
-
-
 </body>
+
+<script>
+    const theme = localStorage.getItem('theme');
+    if (theme === 'dark') document.body.classList.add('dark');
+
+    function changeTheme() {
+        document.body.classList.toggle('dark');
+        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    }
+</script>
 
 </html>

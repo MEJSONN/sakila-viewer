@@ -33,22 +33,6 @@ $stmt->bind_param($paramTypes, ...$params);
 $stmt->execute();
 $films = $stmt->get_result();
 
-$rentedQuery = $baza->query("
-    SELECT film.film_id, film.rental_duration, COUNT(rental.rental_id) AS rented
-    FROM film
-    JOIN inventory ON film.film_id = inventory.film_id
-    LEFT JOIN rental ON inventory.inventory_id = rental.inventory_id AND rental.return_date IS NULL
-    GROUP BY film.film_id
-");
-
-$rentedFilms = [];
-foreach ($rentedQuery as $row) {
-    $rentedFilms[$row['film_id']] = [
-        'limit' => $row['rental_duration'],
-        'rented' => $row['rented']
-    ];
-}
-
 $totalStmt = $baza->prepare("SELECT COUNT(*) as count FROM film_list WHERE $whereSQL");
 $totalStmt->bind_param(substr($paramTypes, 0, -2), ...array_slice($params, 0, -2));
 $totalStmt->execute();
@@ -92,21 +76,18 @@ $pages = ceil($total / $filmPerPage);
                 </section>
                 <hr>
                 <button type="submit">Filtruj</button>
+                <hr>
             </form>
+            <button style="width: 100%;" onclick="location.href='add.php'">Dodaj film</button>
         </menu>
-
         <section class="catalog">
             <?php
             foreach ($films as $film) {
                 $fid = $film['fid'];
-                $limit = $rentedFilms[$fid]['limit'] ?? 0;
-                $rented = $rentedFilms[$fid]['rented'] ?? 0;
-                $available = max(0, $limit - $rented);
-                $disabled = ($available == 0) ? 'disabled' : "onclick=\"location.href='rent.php?fid=$fid'\"";
-            
+
                 echo "<article class='film'>
-                        <h2 class='film-title'>" . htmlspecialchars($film['title']) . "</h2>
-                        <p class='film-description'>" . htmlspecialchars($film['description']) . "</p>
+                        <h2 class='film-title'>" . $film['title'] . "</h2>
+                        <p class='film-description'>" . $film['description'] . "</p>
                         <section class='buttons'>
                             <button onclick=\"location.href='edit.php?fid=$fid'\">Informacje</button>
                             <button onclick=\"if(confirm('Czy na pewno chcesz usunąć ten film?')) { location.href='delete.php?fid=$fid'; }\">Usuń</button>
@@ -121,21 +102,19 @@ $pages = ceil($total / $filmPerPage);
         $queryParams = $_GET;
         if ($page > 1) {
             $queryParams['page'] = $page - 1;
-            echo "<button><a href='?" . http_build_query($queryParams) . "'>Poprzednia</a></button>";
+            echo "<button onclick=\"location.href='?" . http_build_query($queryParams) . "'\">Poprzednia</button>";
         }
-        echo "<strong class='current-page'>$page / $pages</strong>";
+        echo "<strong class='current-page'>$page/$pages</strong>";
         if ($page < $pages) {
             $queryParams['page'] = $page + 1;
-            echo "<button><a href='?" . http_build_query($queryParams) . "'>Następna</a></button>";
+            echo "<button onclick=\"location.href='?" . http_build_query($queryParams) . "'\">Następna</button>";
         }
         ?>
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const theme = localStorage.getItem('theme');
-            if (theme === 'dark') document.body.classList.add('dark');
-        });
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') document.body.classList.add('dark');
 
         function changeTheme() {
             document.body.classList.toggle('dark');
