@@ -120,16 +120,16 @@ $pages = ceil($totalRow['count'] / $filmPerPage);
         }
         ?>
     </footer>
-
-    <script>
-        const theme = localStorage.getItem('theme');
-        if (theme === 'dark') document.body.classList.add('dark');
-
-        function changeTheme() {
-            document.body.classList.toggle('dark');
-            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-        }
-    </script>
 </body>
+
+<script>
+    const theme = localStorage.getItem('theme');
+    if (theme === 'dark') document.body.classList.add('dark');
+
+    function changeTheme() {
+        document.body.classList.toggle('dark');
+        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    }
+</script>
 
 </html>

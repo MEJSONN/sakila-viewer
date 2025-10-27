@@ -31,6 +31,30 @@ $categoriesList = $baza->query("SELECT category_id, name FROM `category`");
                 <p>Opis:</p>
                 <textarea name="description" required rows="3" cols="50"></textarea>
             </label>
+            <details>
+                <summary><strong>Aktorzy:</strong></summary>
+                <?php
+                $actors = $baza->query("SELECT actor_id, first_name, last_name FROM actor");
+                foreach ($actors as $actor) {
+                    echo "
+                    <label for=\"actor_{$actor['actor_id']}\">
+                        <input type=\"checkbox\" name=\"actors[]\" value=\"{$actor['actor_id']}\">
+                        {$actor['first_name']} {$actor['last_name']}
+                    </label><br>
+                    ";
+                }
+                ?>
+            </details>
+            <label for="raiting">
+                <p>Ocena:</p>
+                <select name="raiting" required>
+                    <option value="G">G</option>
+                    <option value="PG">PG</option>
+                    <option value="PG-13">PG-13</option>
+                    <option value="R">R</option>
+                    <option value="NC-17">NC-17</option>
+                </select>
+            </label>
             <label for="releaseYear">
                 <p>Rok wydania:</p>
                 <input type="number" name="releaseYear" min="1900" max="2099" required>
@@ -82,6 +106,10 @@ $categoriesList = $baza->query("SELECT category_id, name FROM `category`");
                     ?>
                 </select>
             </label>
+            <label for="count">
+                <p>Ilość kopii:</p>
+                <input type="number" name="count" min="1" required>
+            </label>
         </section>
         <section class="movie-info">
             <button type="submit">Dodaj film</button>
@@ -100,14 +128,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $languageId = (int)($_POST['language'] ?? 0);
     $originalLanguageId = empty($_POST['originalLanguage']) ? null : (int)$_POST['originalLanguage'];
     $categoryId = (int)($_POST['categorie'] ?? 0);
+    $count = (int)($_POST['count'] ?? 1);
+    $actors = $_POST['actors'] ?? '';
+    $raiting = $_POST['raiting'] ?? 'G';
 
     $stmt = $baza->prepare("
         INSERT INTO film 
-            (title, description, release_year, rental_duration, rental_rate, length, replacement_cost, language_id, original_language_id, last_update)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            (title, description, release_year, rental_duration, rental_rate, length, replacement_cost, language_id, original_language_id, last_update, rating)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
     ");
+
     $stmt->bind_param(
-        "ssiiddiii",
+        "ssiiddiiis",
         $title,
         $description,
         $releaseYear,
@@ -116,7 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $length,
         $replacementCost,
         $languageId,
-        $originalLanguageId
+        $originalLanguageId,
+        $raiting,
     );
 
     if ($stmt->execute()) {
@@ -131,6 +164,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo "<section class='movie-info'><p>Pomyślnie dodano film!</p></section>";
     } else {
         echo "<section class='movie-info'><p>Niestety nie udało się dodać filmu!</p><p>Błąd: {$stmt->error}</p></section>";
+    }
+
+    $stmtInventory = $baza->prepare("
+        INSERT INTO inventory (film_id, store_id, last_update) 
+        VALUES (?, 1, NOW())
+    ");
+
+    $stmtInventory->bind_param("i", $filmId);
+    $stmtInventory->execute();
+
+    $stmtActors = $baza->prepare("
+        INSERT INTO film_actor (actor_id, film_id, last_update) 
+        VALUES (?, ?, NOW())
+    ");
+
+    $stmtActors->bind_param("ii", $actorId, $filmId);
+    foreach ($actors as $actorId) {
+        $stmtActors->execute();
     }
 }
 ?>
