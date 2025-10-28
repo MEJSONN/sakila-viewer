@@ -32,7 +32,7 @@ $categoriesList = $baza->query("SELECT category_id, name FROM `category`");
                 <textarea name="description" required rows="3" cols="50"></textarea>
             </label>
             <details>
-                <summary><strong>Aktorzy:</strong></summary>
+                <summary>Aktorzy:</summary>
                 <?php
                 $actors = $baza->query("SELECT actor_id, first_name, last_name FROM actor");
                 foreach ($actors as $actor) {
@@ -109,6 +109,7 @@ $categoriesList = $baza->query("SELECT category_id, name FROM `category`");
             <label for="count">
                 <p>Ilość kopii:</p>
                 <input type="number" name="count" min="1" required>
+                <small>(Wszystkie nowe kopie będą dostępne do wypożyczenia)</small>
             </label>
         </section>
         <section class="movie-info">
@@ -128,8 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $languageId = (int)($_POST['language'] ?? 0);
     $originalLanguageId = empty($_POST['originalLanguage']) ? null : (int)$_POST['originalLanguage'];
     $categoryId = (int)($_POST['categorie'] ?? 0);
-    $count = (int)($_POST['count'] ?? 1);
-    $actors = $_POST['actors'] ?? '';
+    $count = max(1, (int)($_POST['count'] ?? 1));
+    $actors = $_POST['actors'] ?? [];
+    if (!is_array($actors)) {
+        $actors = [$actors];
+    }
     $raiting = $_POST['raiting'] ?? 'G';
 
     $stmt = $baza->prepare("
@@ -138,8 +142,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
     ");
 
+    $types = 'ssiidid iis';
+    $types = str_replace(' ', '', $types);
+
     $stmt->bind_param(
-        "ssiiddiiis",
+        $types,
         $title,
         $description,
         $releaseYear,
@@ -149,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $replacementCost,
         $languageId,
         $originalLanguageId,
-        $raiting,
+        $raiting
     );
 
     if ($stmt->execute()) {
@@ -166,22 +173,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo "<section class='movie-info'><p>Niestety nie udało się dodać filmu!</p><p>Błąd: {$stmt->error}</p></section>";
     }
 
-    $stmtInventory = $baza->prepare("
-        INSERT INTO inventory (film_id, store_id, last_update) 
-        VALUES (?, 1, NOW())
-    ");
-
-    $stmtInventory->bind_param("i", $filmId);
-    $stmtInventory->execute();
-
-    $stmtActors = $baza->prepare("
-        INSERT INTO film_actor (actor_id, film_id, last_update) 
-        VALUES (?, ?, NOW())
-    ");
-
-    $stmtActors->bind_param("ii", $actorId, $filmId);
-    foreach ($actors as $actorId) {
-        $stmtActors->execute();
+    $baza->begin_transaction();
+    try {
+        $stmtInventory = $baza->prepare("INSERT INTO inventory (film_id, store_id, last_update) VALUES (?, 1, NOW())");
+        $stmtInventory->bind_param("i", $filmId);
+        for ($i = 0; $i < $count; $i++) {
+            $stmtInventory->execute();
+        }
+        
+        if (!empty($actors)) {
+        $stmtActors = $baza->prepare("INSERT INTO film_actor (actor_id, film_id, last_update) VALUES (?, ?, NOW())");
+        $stmtActors->bind_param("ii", $actorId, $filmId);
+        foreach ($actors as $a) {
+            $actorId = (int)$a;
+            if ($actorId > 0) {
+                $stmtActors->execute();
+            }
+        }
     }
 }
 ?>

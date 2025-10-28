@@ -76,9 +76,9 @@ $pages = ceil($total / $filmPerPage);
                 </section>
                 <hr>
                 <button type="submit">Filtruj</button>
-                <hr><br>
+                <hr>
             </form>
-            <button style="width: 100%;" onclick="location.href='add.php'">Dodaj film</button>
+            <button onclick="location.href='add.php'">Dodaj film</button>
         </menu>
         <section class="catalog">
             <?php
@@ -89,7 +89,7 @@ $pages = ceil($total / $filmPerPage);
                         <h2 class='film-title'>" . $film['title'] . "</h2>
                         <p class='film-description'>" . $film['description'] . "</p>
                         <section class='buttons'>
-                            <button onclick=\"location.href='edit.php?fid=$fid'\">Informacje</button>
+                            <button onclick=\"location.href='edit.php?fid=$fid'\">Edytuj informacje</button>
                             <button onclick=\"if(confirm('Czy na pewno chcesz usunąć ten film?')) { location.href='delete.php?fid=$fid'; }\">Usuń</button>
                         </section>
                     </article>";

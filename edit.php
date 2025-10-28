@@ -10,7 +10,11 @@ if (!$fid) {
 $stmt = $baza->prepare("
     SELECT f.*, l.name as language_name, ol.name as original_language_name, 
            c.category_id, c.name as category_name,
-           (SELECT COUNT(*) FROM inventory WHERE film_id = f.film_id) as copy_count
+           (SELECT COUNT(*) FROM inventory WHERE film_id = f.film_id) as copy_count,
+           (SELECT COUNT(*) FROM inventory i 
+            WHERE i.film_id = f.film_id 
+            AND i.inventory_id NOT IN (SELECT inventory_id FROM rental WHERE return_date IS NULL)
+           ) as available_copies
     FROM film f
     LEFT JOIN language l ON f.language_id = l.language_id
     LEFT JOIN language ol ON f.original_language_id = ol.language_id
@@ -54,7 +58,19 @@ $categoriesList = $baza->query("SELECT category_id, name FROM category ORDER BY 
     <link rel="stylesheet" href="styl.css">
 </head>
 
+
 <body>
+
+    <script>
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') document.body.classList.add('dark');
+
+        function changeTheme() {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        }
+    </script>
+
     <header>
         <button onclick="location.href='admin.php'">Panel administracyjny</button>
         <h1>Edytowanie filmu</h1>
@@ -71,7 +87,7 @@ $categoriesList = $baza->query("SELECT category_id, name FROM category ORDER BY 
                 <textarea name="description" required rows="3" cols="50"><?php echo htmlspecialchars($filmInfo['description']); ?></textarea>
             </label>
             <details>
-                <summary><strong>Aktorzy:</strong></summary>
+                <summary>Aktorzy:</summary>
                 <?php
                 $actors = $baza->query("SELECT actor_id, first_name, last_name FROM actor ORDER BY first_name, last_name");
                 while ($actor = $actors->fetch_assoc()) {
@@ -157,6 +173,7 @@ $categoriesList = $baza->query("SELECT category_id, name FROM category ORDER BY 
             <label for="count">
                 <p>Ilość kopii:</p>
                 <input type="number" name="count" min="1" value="<?php echo $filmInfo['copy_count']; ?>" required>
+                <small>(Dostępnych kopii: <?php echo $filmInfo['available_copies']; ?>)</small>
             </label>
         </section>
         <section class="movie-info">
@@ -240,42 +257,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    $deletableCount = $baza->query("
+        SELECT COUNT(*) as count
+        FROM inventory 
+        WHERE film_id = $fid 
+        AND inventory_id NOT IN (
+            SELECT DISTINCT inventory_id 
+            FROM rental
+        )")->fetch_assoc()['count'];
+
     if ($newCopyCount > $currentCopyCount) {
+        // Add new copies
         $stmtAddInventory = $baza->prepare("
-                INSERT INTO inventory (film_id, store_id, last_update) 
-                VALUES (?, 1, NOW())
-            ");
+            INSERT INTO inventory (film_id, store_id, last_update) 
+            VALUES (?, 1, NOW())
+        ");
         $stmtAddInventory->bind_param("i", $fid);
         for ($i = 0; $i < ($newCopyCount - $currentCopyCount); $i++) {
             $stmtAddInventory->execute();
         }
     } elseif ($newCopyCount < $currentCopyCount) {
-        $baza->query(
-            "
+        $toDelete = min($currentCopyCount - $newCopyCount, $deletableCount);
+        if ($toDelete > 0) {
+            $baza->query("
                 DELETE FROM inventory 
                 WHERE film_id = $fid 
                 AND inventory_id NOT IN (
-                    SELECT inventory_id 
-                    FROM rental 
-                    WHERE film_id = $fid 
-                    AND return_date IS NULL
+                    SELECT DISTINCT inventory_id 
+                    FROM rental
                 )
-                LIMIT " . ($currentCopyCount - $newCopyCount)
-        );
+                LIMIT $toDelete
+            ");
+        }
+
+        if ($toDelete < ($currentCopyCount - $newCopyCount)) {
+            echo "<script>
+                alert('Nie można zmniejszyć ilości kopii do " . $newCopyCount .
+                " ponieważ niektóre kopie mają historię wypożyczeń. " .
+                "Minimalna możliwa ilość kopii to " . ($currentCopyCount - $toDelete) . "');
+                document.getElementsByName('count')[0].value = " . ($currentCopyCount - $toDelete) . ";
+            </script>";
+            exit();
+        }
     }
 
     $baza->commit();
+
+    echo "<script>
+        window.location.href = 'edit.php?fid=" . $fid . "';
+    </script>";
+    exit();
 }
 ?>
-
-<script>
-    const theme = localStorage.getItem('theme');
-    if (theme === 'dark') document.body.classList.add('dark');
-
-    function changeTheme() {
-        document.body.classList.toggle('dark');
-        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-    }
-</script>
 
 </html>
