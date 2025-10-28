@@ -200,10 +200,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $newCopyCount = (int)($_POST['count'] ?? 0);
     $currentCopyCount = (int)$filmInfo['copy_count'];
 
-    if (empty($title) || $releaseYear < 1900 || $releaseYear > 2099 || $newCopyCount < 1) {
-        throw new Exception("Nieprawidłowe dane formularza");
-    }
-
     $stmt = $baza->prepare("
             UPDATE film 
             SET title = ?, 
@@ -257,17 +253,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Sprawdź ile kopii można usunąć (te, które nie są aktualnie wypożyczone)
     $deletableCount = $baza->query("
         SELECT COUNT(*) as count
-        FROM inventory 
-        WHERE film_id = $fid 
-        AND inventory_id NOT IN (
-            SELECT DISTINCT inventory_id 
-            FROM rental
+        FROM inventory i
+        WHERE i.film_id = $fid 
+        AND i.inventory_id NOT IN (
+            SELECT inventory_id 
+            FROM rental 
+            WHERE return_date IS NULL
         )")->fetch_assoc()['count'];
 
     if ($newCopyCount > $currentCopyCount) {
-        // Add new copies
+        // Dodaj nowe kopie
         $stmtAddInventory = $baza->prepare("
             INSERT INTO inventory (film_id, store_id, last_update) 
             VALUES (?, 1, NOW())
@@ -279,12 +277,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($newCopyCount < $currentCopyCount) {
         $toDelete = min($currentCopyCount - $newCopyCount, $deletableCount);
         if ($toDelete > 0) {
+            // Usuń tylko te kopie, które nie są aktualnie wypożyczone
             $baza->query("
                 DELETE FROM inventory 
                 WHERE film_id = $fid 
                 AND inventory_id NOT IN (
-                    SELECT DISTINCT inventory_id 
-                    FROM rental
+                    SELECT inventory_id 
+                    FROM rental 
+                    WHERE return_date IS NULL
                 )
                 LIMIT $toDelete
             ");

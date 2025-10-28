@@ -76,11 +76,12 @@ $pages = ceil($total / $filmPerPage);
                 </section>
                 <hr>
                 <button type="submit">Filtruj</button>
-                <hr>
             </form>
-            <button onclick="location.href='add.php'">Dodaj film</button>
         </menu>
         <section class="catalog">
+            <div class="add-film-button">
+                <button onclick="location.href='add.php'">Dodaj film</button>
+            </div>
             <?php
             foreach ($films as $film) {
                 $fid = $film['fid'];

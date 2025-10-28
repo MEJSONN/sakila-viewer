@@ -77,6 +77,18 @@ main {
     width: 80%;
 }
 
+.add-film-button {
+    grid-column: 1 / span 2;
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.add-film-button button {
+    padding: auto;
+    width: 100%;
+    height: auto;
+}
+
 .buttons {
     display: flex;
     justify-content: space-between;

@@ -56,12 +56,20 @@ foreach ($languageInfo as $languageRow) {
     </section>
     <section class="movie-info">
         <?php
-        $datas = $baza->query("SELECT COUNT(i.inventory_id) AS wszystkie, SUM(CASE WHEN (SELECT r2.return_date FROM rental r2 WHERE r2.inventory_id = i.inventory_id ORDER BY r2.rental_date DESC LIMIT 1) IS NULL THEN 1 ELSE 0 END) AS wypozyczone FROM inventory i WHERE i.film_id = $fid");
+        $datas = $baza->query("
+            SELECT 
+                COUNT(i.inventory_id) AS wszystkie,
+                SUM(CASE WHEN r.rental_id IS NULL OR r.return_date IS NOT NULL THEN 1 ELSE 0 END) AS dostepne
+            FROM film f 
+            LEFT JOIN inventory i ON f.film_id = i.film_id 
+            LEFT JOIN rental r ON i.inventory_id = r.inventory_id AND r.return_date IS NULL
+            WHERE f.film_id = $fid
+            GROUP BY f.film_id
+        ");
 
         foreach ($datas as $data) {
             $wszystkie = $data['wszystkie'] ?? 0;
-            $wypozyczone = $data['wypozyczone'] ?? 0;
-            $dostepne = $wszystkie - $wypozyczone;
+            $dostepne = $data['dostepne'] ?? 0;
             $disabled = ($dostepne <= 0) ? 'disabled' : '';
         }
 
