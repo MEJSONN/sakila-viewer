@@ -31,7 +31,7 @@ This repository contains a small demo UI for viewing films, filtering by title a
 
 1. Copy the project to your web server document root, e.g. with XAMPP put it at:
 
-   c:\xampp\htdocs\rapin\sakila-viewer
+   c:\xampp\htdocs\sakila-viewer
 
 2. Start Apache and MySQL (via XAMPP control panel).
 
@@ -58,7 +58,7 @@ This repository contains a small demo UI for viewing films, filtering by title a
 
 5. Open the app in your browser:
 
-   http://localhost/rapin/sakila-viewer/index.php
+   http://localhost/sakila-viewer/index.php
 
 ## Usage
 
