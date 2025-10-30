@@ -1,6 +1,6 @@
 <?php
 $baza = new mysqli('localhost', 'root', '', 'sakila');
-if ($baza->connect_error) die("Błąd połączenia z bazą danych: " . $baza->connect_error);
+if ($baza->connect_error) die("Błąd połączenia z bazą danych: {$baza->connect_error}");
 
 $filmPerPage = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -62,7 +62,7 @@ $pages = ceil($totalRow['count'] / $filmPerPage);
         <menu class="menu">
             <form method="get" class="filters">
                 <h4>Szukaj filmu po tytule:</h4>
-                <input type="text" name="title" placeholder="Tytuł..." value="<?= $titleInput ?>">
+                <input type="text" name="title" placeholder="Tytuł..." value="<?php echo $titleInput; ?>">
                 <hr>
                 <section class="category-list">
                     <h4>Filtruj przez kategorie:</h4>

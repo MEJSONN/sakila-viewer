@@ -1,6 +1,6 @@
 <?php
 $baza = new mysqli('localhost', 'root', '', 'sakila');
-if ($baza->connect_error) die("Błąd połączenia z bazą danych: " . $baza->connect_error);
+if ($baza->connect_error) die("Błąd połączenia z bazą danych:{$baza->connect_error}");
 
 $filmPerPage = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -62,7 +62,7 @@ $pages = ceil($total / $filmPerPage);
         <menu class="menu">
             <form method="get" class="filters">
                 <h4>Szukaj filmu po tytule:</h4>
-                <input type="text" name="title" placeholder="Tytuł..." value="<?= htmlspecialchars($titleInput) ?>">
+                <input type="text" name="title" placeholder="Tytuł..." value="<?php echo $titleInput ?>">
                 <hr>
                 <section class="category-list">
                     <h4>Filtruj przez kategorie:</h4>
@@ -87,8 +87,8 @@ $pages = ceil($total / $filmPerPage);
                 $fid = $film['fid'];
 
                 echo "<article class='film'>
-                        <h2 class='film-title'>" . $film['title'] . "</h2>
-                        <p class='film-description'>" . $film['description'] . "</p>
+                        <h2 class='film-title'>{$film['title']}</h2>
+                        <p class='film-description'>{$film['description']}</p>
                         <section class='buttons'>
                             <button onclick=\"location.href='edit.php?fid=$fid'\">Edytuj informacje</button>
                             <button onclick=\"if(confirm('Czy na pewno chcesz usunąć ten film?')) { location.href='delete.php?fid=$fid'; }\">Usuń</button>
@@ -103,7 +103,7 @@ $pages = ceil($total / $filmPerPage);
         $queryParams = $_GET;
         if ($page > 1) {
             $queryParams['page'] = $page - 1;
-            echo "<button onclick=\"location.href='?" . http_build_query($queryParams) . "'\">Poprzednia</button>";
+            echo "<button onclick=\"location.href='?{http_build_query($queryParams)}'\">Poprzednia</button>";
         }
         echo "<strong class='current-page'>$page/$pages</strong>";
         if ($page < $pages) {

@@ -30,11 +30,12 @@
         exit;
     }
 
-    $actorsQuery = "SELECT GROUP_CONCAT(CONCAT(a.first_name, ' ', a.last_name) SEPARATOR ', ') AS actors
-                    FROM film_actor fa 
-                    JOIN actor a ON fa.actor_id = a.actor_id 
-                    WHERE fa.film_id = $fid";
-    $actorsResult = $baza->query($actorsQuery);
+    $actorsResult = $baza->query("
+        SELECT GROUP_CONCAT(CONCAT(a.first_name, ' ', a.last_name) SEPARATOR ', ') AS actors
+        FROM film_actor fa 
+        JOIN actor a ON fa.actor_id = a.actor_id 
+        WHERE fa.film_id = $fid
+    ");
     $actors = $actorsResult->fetch_assoc()['actors'] ?? 'Brak informacji o aktorach';
 
     $availableDatas = $baza->query("
@@ -83,7 +84,7 @@
     $rentalResult = $baza->query("INSERT INTO rental (rental_date, inventory_id, customer_id, return_date, staff_id, last_update) VALUES (NOW(), $inventoryId, 1, NULL, 1, NOW())");
     
     if (!$rentalResult) {
-        echo "<h1>Błąd podczas wypożyczania filmu: " . $baza->error . "</h1>";
+        echo "<h1>Błąd podczas wypożyczania filmu: {$baza->error}</h1>";
         echo "<button onclick=\"location.href='index.php'\">Powrót</button>";
         exit;
     }
@@ -100,12 +101,12 @@
                 <p>Aktorzy: {$actors}</p>
             </section>
             <section class='movie-info'>
-                <button onclick=\"location.href='index.php'\">Wróć do listy filmów</button>
+                <button onclick=\"location.href='film.php?fid={$fid}'\">Wróć do szczegółów filmu</button>
             </section>
         ";
     } else {
         echo "<h1>Błąd podczas pobierania informacji o filmie</h1>";
-        echo "<button onclick=\"location.href='index.php'\">Powrót</button>";
+        echo "<button onclick=\"location.href='film.php?fid={$fid}'\">Powrót</button>";
     }
     ?>
 </body>

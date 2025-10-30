@@ -1,6 +1,6 @@
 <?php
 $baza = new mysqli('localhost', 'root', '', 'sakila');
-if ($baza->connect_error) die("Błąd połączenia z bazą danych: " . $baza->connect_error);
+if ($baza->connect_error) die("Błąd połączenia z bazą danych: {$baza->connect_error}");
 
 $fid = isset($_GET['fid']) ? (int)$_GET['fid'] : 0;
 if ($fid <= 0) {

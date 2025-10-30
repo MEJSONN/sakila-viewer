@@ -1,10 +1,10 @@
 <?php
 $baza = new mysqli('localhost', 'root', '', 'sakila');
-if ($baza->connect_error) die("Błąd połączenia z bazą danych: " . $baza->connect_error);
+if ($baza->connect_error) die("Błąd połączenia z bazą danych: {$baza->connect_error}");
 
-$fid = $_GET['fid'] ?? 0;
-if (!$fid) {
-    die("Nie podano ID filmu");
+$fid = isset($_GET['fid']) ? (int)$_GET['fid'] : 0;
+if ($fid <= 0) {
+    die("Niepoprawne ID filmu.");
 }
 
 $stmt = $baza->prepare("
@@ -85,11 +85,11 @@ $minCopies = max(1, (int)$filmInfo['copy_count'] - $deletableCount);
         <section class="movie-info">
             <label for="title">
                 <p>Tytuł:</p>
-                <input type="text" name="title" value="<?php echo htmlspecialchars($filmInfo['title']); ?>" required>
+                <input type="text" name="title" value="<?php echo $filmInfo['title']; ?>" required>
             </label>
             <label for="description">
                 <p>Opis:</p>
-                <textarea name="description" required rows="3" cols="50"><?php echo htmlspecialchars($filmInfo['description']); ?></textarea>
+                <textarea name="description" required rows="3" cols="50"><?php echo $filmInfo['description']; ?></textarea>
             </label>
             <details>
                 <summary>Aktorzy:</summary>
@@ -100,7 +100,7 @@ $minCopies = max(1, (int)$filmInfo['copy_count'] - $deletableCount);
                     echo "
                     <label for=\"actor_{$actor['actor_id']}\">
                         <input type=\"checkbox\" id=\"actor_{$actor['actor_id']}\" name=\"actors[]\" value=\"{$actor['actor_id']}\" {$isChecked}>
-                        " . htmlspecialchars("{$actor['first_name']} {$actor['last_name']}") . "
+                        {$actor['first_name']} {$actor['last_name']}
                     </label><br>
                     ";
                 }
@@ -145,7 +145,7 @@ $minCopies = max(1, (int)$filmInfo['copy_count'] - $deletableCount);
                     foreach ($languagesList as $lang) {
                         $selected = ($lang['language_id'] == $filmInfo['language_id']) ? 'selected' : '';
                         echo "<option value=\"{$lang['language_id']}\" {$selected}>" .
-                            htmlspecialchars($lang['name']) . "</option>";
+                            $lang['name'] . "</option>";
                     }
                     ?>
                 </select>
@@ -157,8 +157,7 @@ $minCopies = max(1, (int)$filmInfo['copy_count'] - $deletableCount);
                     <?php
                     foreach ($languagesList as $lang) {
                         $selected = ($lang['language_id'] == $filmInfo['original_language_id']) ? 'selected' : '';
-                        echo "<option value=\"{$lang['language_id']}\" {$selected}>" .
-                            htmlspecialchars($lang['name']) . "</option>";
+                        echo "<option value=\"{$lang['language_id']}\" {$selected}>{$lang['name']}</option>";
                     }
                     ?>
                 </select>
@@ -169,8 +168,7 @@ $minCopies = max(1, (int)$filmInfo['copy_count'] - $deletableCount);
                     <?php
                     foreach ($categoriesList as $cat) {
                         $selected = ($cat['category_id'] == $filmInfo['category_id']) ? 'selected' : '';
-                        echo "<option value=\"{$cat['category_id']}\" {$selected}>" .
-                            htmlspecialchars($cat['name']) . "</option>";
+                        echo "<option value=\"{$cat['category_id']}\" {$selected}>{$cat['name']}</option>";
                     }
                     ?>
                 </select>
@@ -279,11 +277,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($newCopyCount < $currentCopyCount) {
         $toDelete = min($currentCopyCount - $newCopyCount, $deletableCount);
         if ($toDelete > 0) {
-            // Only delete inventory rows that have no rental records at all.
-            // Deleting inventory with any rental history will violate the FK constraint
-            // (rental.inventory_id -> inventory.inventory_id). Wrap the operation to
-            // handle any database exceptions gracefully.
-            try {
                 $baza->query("
                     DELETE FROM inventory 
                     WHERE film_id = $fid 
@@ -293,14 +286,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     )
                     LIMIT $toDelete
                 ");
-            } catch (mysqli_sql_exception $e) {
-                $baza->rollback();
-                echo "<script>\n" .
-                    "alert('Nie można usunąć kopii filmu ze względu na powiązane rekordy wypożyczeń.');\n" .
-                    "document.getElementsByName('count')[0].value = " . ($currentCopyCount) . ";\n" .
-                    "</script>";
-                exit();
-            }
         }
 
         if ($toDelete < ($currentCopyCount - $newCopyCount)) {
@@ -316,8 +301,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $baza->commit();
 
-    echo "<script>
-        window.location.href = 'edit.php?fid=" . $fid . "';
+    echo 
+    "<script>
+        window.location.href = 'edit.php?fid={$fid}';
     </script>";
     exit();
 }

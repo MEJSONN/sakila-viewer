@@ -1,6 +1,6 @@
 <?php
 $baza = new mysqli('localhost', 'root', '', 'sakila');
-if ($baza->connect_error) die("Błąd połączenia z bazą danych: " . $baza->connect_error);
+if ($baza->connect_error) die("Błąd połączenia z bazą danych: {$baza->connect_error}");
 
 $languagesList = $baza->query("SELECT language_id, name FROM `language`");
 $categoriesList = $baza->query("SELECT category_id, name FROM `category`");

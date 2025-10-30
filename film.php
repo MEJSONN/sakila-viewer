@@ -1,6 +1,6 @@
 <?php
 $baza = new mysqli('localhost', 'root', '', 'sakila');
-if ($baza->connect_error) die("Błąd połączenia z bazą danych: " . $baza->connect_error);
+if ($baza->connect_error) die("Błąd połączenia z bazą danych: {$baza->connect_error}");
 
 $fid = $_GET['fid'] ?? 0;
 $stmt = $baza->prepare("SELECT * FROM film_list WHERE fid = ?");
@@ -13,10 +13,10 @@ if (!$filmInfo) {
 
 $film = $filmInfo->fetch_assoc();
 if ($film) {
-    $title = htmlspecialchars($film['title']);
-    $description = htmlspecialchars($film['description']);
+    $title = $film['title'];
+    $description = $film['description'];
     $length = (int)$film['length'];
-    $actors = htmlspecialchars($film['actors']);
+    $actors = $film['actors'];
 } else {
     die("Film nie został znaleziony");
 }
