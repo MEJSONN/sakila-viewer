@@ -70,10 +70,7 @@ $pages = ceil($totalRow['count'] / $filmPerPage);
                     $categories = $baza->query("SELECT * FROM category ORDER BY name ASC");
                     foreach ($categories as $category) {
                         $checked = in_array($category['name'], $categoriesFilter) ? 'checked' : '';
-                        echo "<label class='category-filter'>
-                                <input type='checkbox' name='category[]' value='{$category['name']}' $checked> 
-                                {$category['name']}
-                            </label><br>";
+                        echo "<label><input type='checkbox' name='category[]' value='{$category['name']}' $checked> {$category['name']}</label><br>";
                     }
                     ?>
                 </section>

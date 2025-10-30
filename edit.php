@@ -47,6 +47,11 @@ while ($row = $result->fetch_assoc()) {
 $languagesList = $baza->query("SELECT language_id, name FROM language ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 
 $categoriesList = $baza->query("SELECT category_id, name FROM category ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+
+$sql = "SELECT COUNT(*) as count FROM inventory i WHERE i.film_id = " . (int)$fid . " AND i.inventory_id NOT IN (SELECT inventory_id FROM rental)";
+$deletableRow = $baza->query($sql)->fetch_assoc();
+$deletableCount = (int)($deletableRow['count'] ?? 0);
+$minCopies = max(1, (int)$filmInfo['copy_count'] - $deletableCount);
 ?>
 <!DOCTYPE html>
 <html lang="pl">
@@ -172,8 +177,8 @@ $categoriesList = $baza->query("SELECT category_id, name FROM category ORDER BY 
             </label>
             <label for="count">
                 <p>Ilość kopii:</p>
-                <input type="number" name="count" min="1" value="<?php echo $filmInfo['copy_count']; ?>" required>
-                <small>(Dostępnych kopii: <?php echo $filmInfo['available_copies']; ?>)</small>
+                <input type="number" name="count" min="<?php echo $minCopies; ?>" value="<?php echo $filmInfo['copy_count']; ?>" required>
+                <small>(Minimalna możliwa ilość kopii: <?php echo $minCopies; ?>)</small>
             </label>
         </section>
         <section class="movie-info">
@@ -259,8 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         WHERE i.film_id = $fid 
         AND i.inventory_id NOT IN (
             SELECT inventory_id 
-            FROM rental 
-            WHERE return_date IS NULL
+            FROM rental
         )")->fetch_assoc()['count'];
 
     if ($newCopyCount > $currentCopyCount) {
@@ -275,16 +279,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($newCopyCount < $currentCopyCount) {
         $toDelete = min($currentCopyCount - $newCopyCount, $deletableCount);
         if ($toDelete > 0) {
-            $baza->query("
-                DELETE FROM inventory 
-                WHERE film_id = $fid 
-                AND inventory_id NOT IN (
-                    SELECT inventory_id 
-                    FROM rental 
-                    WHERE return_date IS NULL
-                )
-                LIMIT $toDelete
-            ");
+            // Only delete inventory rows that have no rental records at all.
+            // Deleting inventory with any rental history will violate the FK constraint
+            // (rental.inventory_id -> inventory.inventory_id). Wrap the operation to
+            // handle any database exceptions gracefully.
+            try {
+                $baza->query("
+                    DELETE FROM inventory 
+                    WHERE film_id = $fid 
+                    AND inventory_id NOT IN (
+                        SELECT inventory_id 
+                        FROM rental
+                    )
+                    LIMIT $toDelete
+                ");
+            } catch (mysqli_sql_exception $e) {
+                $baza->rollback();
+                echo "<script>\n" .
+                    "alert('Nie można usunąć kopii filmu ze względu na powiązane rekordy wypożyczeń.');\n" .
+                    "document.getElementsByName('count')[0].value = " . ($currentCopyCount) . ";\n" .
+                    "</script>";
+                exit();
+            }
         }
 
         if ($toDelete < ($currentCopyCount - $newCopyCount)) {
