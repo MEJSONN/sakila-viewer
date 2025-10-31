@@ -81,6 +81,26 @@ main {
     justify-content: left;
 }
 
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.category-label {
+    padding: var(--spacing-sm);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.category-label:hover {
+    cursor: pointer;
+    background-color: var(--border-color);
+}
+
 .catalog {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

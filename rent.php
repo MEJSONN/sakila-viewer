@@ -121,3 +121,7 @@
 </script>
 
 </html>
+
+<?php
+$baza->close();
+?>

@@ -89,3 +89,7 @@ foreach ($languageInfo as $languageRow) {
 </script>
 
 </html>
+
+<?php
+$baza->close();
+?>

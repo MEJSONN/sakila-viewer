@@ -6,22 +6,26 @@ $languagesList = $baza->query("SELECT language_id, name FROM `language`");
 $categoriesList = $baza->query("SELECT category_id, name FROM `category`");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $baza->real_escape_string($_POST['title']);
-    $description = $baza->real_escape_string($_POST['description']);
-    $raiting = $baza->real_escape_string($_POST['raiting']);
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $raiting = $_POST['raiting'];
     $releaseYear = (int)$_POST['releaseYear'];
     $rentalDuration = (int)$_POST['rentalDuration'];
     $rentalRate = (float)$_POST['rentalRate'];
     $length = (int)$_POST['length'];
     $replacementCost = (float)$_POST['replacementCost'];
     $language = (int)$_POST['language'];
-    $originalLanguage = !empty($_POST['originalLanguage']) ? (int)$_POST['originalLanguage'] : 'NULL';
+    $originalLanguage = !empty($_POST['originalLanguage']) ? (int)$_POST['originalLanguage'] : null;
     $categorie = (int)$_POST['categorie'];
     $count = (int)$_POST['count'];
     $actors = isset($_POST['actors']) ? (is_array($_POST['actors']) ? $_POST['actors'] : array($_POST['actors'])) : [];
 
-    $baza->query("INSERT INTO film (title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, last_update) VALUES ('$title', '$description', $releaseYear, $language, " . ($originalLanguage === 'NULL' ? 'NULL' : $originalLanguage) . ", $rentalDuration, $rentalRate, $length, $replacementCost, '$raiting', NOW())");
-    $filmId = $baza->insert_id;
+    $stmt = $baza->prepare("INSERT INTO film (title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, last_update) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+    if (!$stmt) die("Błąd przygotowania zapytania: {$baza->error}");
+    $stmt->bind_param('ssiiididds', $title, $description, $releaseYear, $language, $originalLanguage, $rentalDuration, $rentalRate, $length, $replacementCost, $raiting);
+    if (!$stmt->execute()) die("Błąd wykonania zapytania: {$stmt->error}");
+    $filmId = $stmt->insert_id ? $stmt->insert_id : $baza->insert_id;
+    $stmt->close();
 
     foreach ($actors as $actorId) {
         $actorIdEscaped = (int)$actorId;
@@ -71,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     foreach ($actors as $actor) {
                         $id = 'actor_' . $actor['actor_id'];
                         echo "
-                        <label for=\"{$id}\">
+                        <label for=\"{$id}\" class='category-label'>
                             <input id=\"{$id}\" type=\"checkbox\" name=\"actors[]\" value=\"{$actor['actor_id']}\">
                             <span>{$actor['first_name']} {$actor['last_name']}</span>
                         </label><br>
@@ -162,3 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </script>
 
 </html>
+
+<?php
+$baza->close();
+?>

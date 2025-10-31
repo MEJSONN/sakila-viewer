@@ -63,7 +63,6 @@ $minCopies = max(1, (int)$filmInfo['copy_count'] - $deletableCount);
     <link rel="stylesheet" href="styl.css">
 </head>
 
-
 <body>
 
     <script>
@@ -98,7 +97,7 @@ $minCopies = max(1, (int)$filmInfo['copy_count'] - $deletableCount);
                 while ($actor = $actors->fetch_assoc()) {
                     $isChecked = in_array($actor['actor_id'], $selectedActors) ? 'checked' : '';
                     echo "
-                    <label for=\"actor_{$actor['actor_id']}\">
+                    <label for=\"actor_{$actor['actor_id']}\" class='category-label'>
                         <input type=\"checkbox\" id=\"actor_{$actor['actor_id']}\" name=\"actors[]\" value=\"{$actor['actor_id']}\" {$isChecked}>
                         {$actor['first_name']} {$actor['last_name']}
                     </label><br>
@@ -310,3 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 </html>
+
+<?php
+$baza->close();
+?>

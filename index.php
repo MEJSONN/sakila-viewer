@@ -28,7 +28,7 @@ $params[] = $filmPerPage;
 $params[] = $offset;
 $paramTypes .= "ii";
 
-$stmt = $baza->prepare("SELECT fid, title, category, description FROM film_list WHERE $whereSQL LIMIT ? OFFSET ?");
+$stmt = $baza->prepare("SELECT fid, title, category, LEFT(description, 400) as description FROM film_list WHERE $whereSQL LIMIT ? OFFSET ?");
 $stmt->bind_param($paramTypes, ...$params);
 $stmt->execute();
 $films = $stmt->get_result();
@@ -70,7 +70,7 @@ $pages = ceil($totalRow['count'] / $filmPerPage);
                     $categories = $baza->query("SELECT * FROM category ORDER BY name ASC");
                     foreach ($categories as $category) {
                         $checked = in_array($category['name'], $categoriesFilter) ? 'checked' : '';
-                        echo "<label><input type='checkbox' name='category[]' value='{$category['name']}' $checked> {$category['name']}</label><br>";
+                        echo "<label class='category-label'><input type='checkbox' name='category[]' value='{$category['name']}' $checked> {$category['name']}</label>";
                     }
                     ?>
                 </section>
@@ -103,7 +103,7 @@ $pages = ceil($totalRow['count'] / $filmPerPage);
                 echo "
                     <article class='film'>
                         <h2 class='film-title'>{$film['title']}</h2>
-                        <p class='film-description'>{$film['description']}</p>
+                        <p class='film-description'>{$film['description']}...</p>
                         <section class='buttons'>
                             <button onclick=\"location.href='film.php?fid=$fid'\">Szczegóły</button>
                             <button $disabled onclick=\"location.href='rent.php?fid=$fid'\">Wypożycz ($dostepne/$wszystkie)</button>
@@ -141,3 +141,7 @@ $pages = ceil($totalRow['count'] / $filmPerPage);
 </script>
 
 </html>
+
+<?php
+$baza->close();
+?>

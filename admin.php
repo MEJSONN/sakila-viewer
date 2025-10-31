@@ -28,7 +28,7 @@ $params[] = $filmPerPage;
 $params[] = $offset;
 $paramTypes .= "ii";
 
-$stmt = $baza->prepare("SELECT fid, title, category, description FROM film_list WHERE $whereSQL LIMIT ? OFFSET ?");
+$stmt = $baza->prepare("SELECT fid, title, category, LEFT(description, 400) as description FROM film_list WHERE $whereSQL LIMIT ? OFFSET ?");
 $stmt->bind_param($paramTypes, ...$params);
 $stmt->execute();
 $films = $stmt->get_result();
@@ -44,7 +44,6 @@ $pages = ceil($total / $filmPerPage);
 
 <!DOCTYPE html>
 <html lang="pl">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -70,7 +69,7 @@ $pages = ceil($total / $filmPerPage);
                     $categories = $baza->query("SELECT * FROM category ORDER BY name ASC");
                     foreach ($categories as $category) {
                         $checked = in_array($category['name'], $categoriesFilter) ? 'checked' : '';
-                        echo "<label><input type='checkbox' name='category[]' value='{$category['name']}' $checked> {$category['name']}</label><br>";
+                        echo "<label class='category-label'><input type='checkbox' name='category[]' value='{$category['name']}' $checked> {$category['name']}</label>";
                     }
                     ?>
                 </section>
@@ -88,7 +87,7 @@ $pages = ceil($total / $filmPerPage);
 
                 echo "<article class='film'>
                         <h2 class='film-title'>{$film['title']}</h2>
-                        <p class='film-description'>{$film['description']}</p>
+                        <p class='film-description'>{$film['description']}...</p>
                         <section class='buttons'>
                             <button onclick=\"location.href='edit.php?fid=$fid'\">Edytuj informacje</button>
                             <button onclick=\"if(confirm('Czy na pewno chcesz usunąć ten film?')) { location.href='delete.php?fid=$fid'; }\">Usuń</button>
@@ -125,3 +124,7 @@ $pages = ceil($total / $filmPerPage);
 </body>
 
 </html>
+
+<?php
+$baza->close();
+?>

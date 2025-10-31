@@ -11,6 +11,7 @@ $baza->query("DELETE FROM inventory WHERE film_id = $fid");
 $baza->query("DELETE FROM film_actor WHERE film_id = $fid");
 $baza->query("DELETE FROM film_category WHERE film_id = $fid");
 $baza->query("DELETE FROM film WHERE film_id = $fid");
+$baza->close();
 header('Location: ./admin.php');
 exit;
 ?>
